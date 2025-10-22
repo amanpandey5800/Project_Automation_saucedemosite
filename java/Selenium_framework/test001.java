@@ -1,6 +1,7 @@
 package Selenium_framework;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 
 import org.openqa.selenium.JavascriptExecutor;
@@ -8,11 +9,19 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.Select;
 import org.testng.Assert;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.Status;
+
 import Utilities.common;
+import Utilities.extentreports;
 import pom_pages.cart_page;
 import pom_pages.checkout_page;
 import pom_pages.login_page;
@@ -26,15 +35,36 @@ public class test001 extends common{
 	cart_page cp;
 	checkout_page cpp;
 	
+	public ExtentReports extent;
+    public ExtentTest test;
 	
 	@BeforeClass
 	public void brow() {
+		
 		launch("https://www.saucedemo.com/");
+		extent = new ExtentReports();
+//		extent.
+		// Initialize report
+        extent = extentreports.setup();
 		
 	}
 	
+//	@BeforeMethod
+//	public void reports(Method method) {
+		
+		
+//		test=er.extent.createTest("Test Case : " + method.getName());
+//		test.log(Status.PASS,"Test Case Passed is " + method.getName());
+
+//	}
+	@BeforeMethod
+    public void startReport(Method method) {
+        test = extent.createTest(method.getName());
+    }
+	
 	@Test
 	public void login_into() throws IOException {
+		
 		lp=new login_page(dr);
 		
 		String username=excelfunc.excel_read(1,0);
@@ -43,6 +73,7 @@ public class test001 extends common{
 		lp.uname(username);
 		lp.pwd(password);
 		lp.btn();
+		test.log(Status.PASS, "Login Successful");
 										
 	}
 		
@@ -70,6 +101,8 @@ public class test001 extends common{
 		int exp=1;
 		Assert.assertEquals(actual,exp,"Cart is empty");
 //		System.out.println("Cart not empty");	
+		
+		test.log(Status.PASS, "Cart has successfully added an item");
 	}
 	
 	@Test(dependsOnMethods="cart")
@@ -77,6 +110,7 @@ public class test001 extends common{
 		cp=new cart_page(dr);
 		
 		cp.checkclick();
+		test.log(Status.PASS, "Proceeded to checkout page successfully");
 	}
 	
 	@Test(dependsOnMethods="cart_checkout")
@@ -105,11 +139,26 @@ public class test001 extends common{
 		String expected="Thank you for your order!";
 		Assert.assertEquals(actual, expected);
 		System.out.println("Everything good");
+		
+		test.log(Status.PASS, "Final confirmation validated successfully");
 	
 	}	
 	
-	@AfterClass
-	public void endd() {
-		dr.close();
-	}
+	
+	@AfterMethod
+    public void getResult(ITestResult result) {
+        if (result.getStatus() == ITestResult.FAILURE) {
+            test.log(Status.FAIL, "Test Failed: " + result.getThrowable());
+        } else if (result.getStatus() == ITestResult.SKIP) {
+            test.log(Status.SKIP, "Test Skipped: " + result.getName());
+        } else {
+            test.log(Status.PASS, "Test Passed: " + result.getName());
+        }
+    }
+	
+	 @AfterClass
+	    public void tearDown() {
+	        dr.quit();
+	        extent.flush();
+	    }
 }
