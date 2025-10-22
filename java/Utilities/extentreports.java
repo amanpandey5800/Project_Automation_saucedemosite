@@ -14,7 +14,7 @@ public class extentreports {
             String path = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
             ExtentSparkReporter reporter = new ExtentSparkReporter(path);
 
-            // Optional styling and details
+            // making my style of theme and all
             reporter.config().setReportName("Sauce Demo Automation Report");
             reporter.config().setDocumentTitle("Test Results");
             reporter.config().setTheme(Theme.STANDARD);
@@ -26,3 +26,4 @@ public class extentreports {
         return extent;
 }
 }
+
